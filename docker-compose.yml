@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend-service:
+    build: .
+    ports:
+      - "8080:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db/files_db
+      - MARKITDOWN_URL=http://markitdown:8490/process_file
+      - UNSTRUCTURED_URL=http://unstructured:8000/general/v0/general
+      - FLASHCARD_GEN_URL=http://flashcard-gen:8000/generate
+    depends_on:
+      - db
+      - markitdown
+      - unstructured
+      - flashcard-gen
+
+  # DB POSTGRES
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: files_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # UNSTRUCTURED Versione ARM64
+  unstructured:
+    image: robwilkes/unstructured-api:latest # Interno. Comunica solo con il backend. Porta 8000.
+  markitdown:
+    build:
+      context: ../MarkItDownServer
+      dockerfile: Dockerfile
+    ports:
+      - "8490:8490"
+  flashcard-gen:
+    build:
+      context: ../FlashcardGenerator
+      dockerfile: Dockerfile
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY} # Legge dal file .env o dall'ambiente
+      - GROQ_MODEL=openai/gpt-oss-20b
+
+volumes:
+  postgres_data:
