@@ -40,8 +40,9 @@ services:
       context: ../FlashcardGenerator
       dockerfile: Dockerfile
     environment:
-      - GROQ_API_KEY=${GROQ_API_KEY} # Legge dal file .env o dall'ambiente
-      - GROQ_MODEL=openai/gpt-oss-20b
+      - API_KEY=${AI_API_KEY} # Legge dal file .env o dall'ambiente
+      - MODEL=${AI_MODEL}
+      - BASE_URL=${AI_BASE_URL}
 
 volumes:
   postgres_data:
