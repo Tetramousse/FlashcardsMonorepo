@@ -26,15 +26,13 @@ Il sistema applica una strategia di segmentazione rigorosa per ottimizzare il co
 Creare un file `.env` nella root del progetto. Grazie all'architettura flessibile, è possibile configurare qualsiasi modello compatibile con le API di OpenAI.
 
 ```bash
+# Configurazione modello e provider LLM
+AI_API_KEY = "your-api-key"
+AI_MODEL = "openai/gpt-oss-20b"
+AI_BASE_URL = "https://api.groq.com/openai/v1"
+
 # Configurazione Database
 DATABASE_URL="postgresql+asyncpg://postgres:postgres@db/files_db"
-
-# Configurazione AI Provider (Esempio con Groq)
-AI_API_KEY="your-api-key"
-AI_MODEL="openai/gpt-oss-20b"
-AI_BASE_URL="[https://api.groq.com/openai/v1](https://api.groq.com/openai/v1)"
-
-# URL Interni dei Microservizi (Default Docker Network)
-MARKITDOWN_URL="http://markitdown:8490/process_file"
-UNSTRUCTURED_URL="http://unstructured:8000/general/v0/general"
-FLASHCARD_GEN_URL="http://flashcard-gen:8000/generate"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="postgres"
+POSTGRES_DB="files_db"

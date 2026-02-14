@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   backend-service:
     build: .
     ports:
       - "8080:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db/files_db
+      - DATABASE_URL=${DATABASE_URL}
       - MARKITDOWN_URL=http://markitdown:8490/process_file
       - UNSTRUCTURED_URL=http://unstructured:8000/general/v0/general
       - FLASHCARD_GEN_URL=http://flashcard-gen:8000/generate
@@ -16,31 +14,31 @@ services:
       - unstructured
       - flashcard-gen
 
-  # DB POSTGRES
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: files_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # UNSTRUCTURED Versione ARM64
   unstructured:
-    image: robwilkes/unstructured-api:latest # Interno. Comunica solo con il backend. Porta 8000.
+    image: robwilkes/unstructured-api:latest
+
   markitdown:
     build:
       context: ../MarkItDownServer
       dockerfile: Dockerfile
     ports:
       - "8490:8490"
+
   flashcard-gen:
     build:
       context: ../FlashcardGenerator
       dockerfile: Dockerfile
     environment:
-      - API_KEY=${AI_API_KEY} # Legge dal file .env o dall'ambiente
+      - API_KEY=${AI_API_KEY}
       - MODEL=${AI_MODEL}
       - BASE_URL=${AI_BASE_URL}
 

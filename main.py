@@ -44,12 +44,11 @@ class DeleteRequest(BaseModel):
 
 class FlashcardRequest(BaseModel):
     id: int
-    limit: int = 5
+    limit: int = 10
 
 class FlashcardResponse(BaseModel):
     question: str
     answer: str
-    points: int
 
 @app.post("/uploadFile")
 async def upload_file(name: str = Form(...), file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
