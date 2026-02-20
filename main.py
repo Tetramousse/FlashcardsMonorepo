@@ -8,11 +8,36 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, select, func, delete
 from pydantic import BaseModel
+import asyncio
+import firebase_admin
+from firebase_admin import credentials, auth as firebase_auth
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@db/dbname")
 MARKITDOWN_URL = os.getenv("MARKITDOWN_URL", "http://markitdown:8490/process_file")
 UNSTRUCTURED_URL = os.getenv("UNSTRUCTURED_URL", "http://unstructured:8000/general/v0/general")
 FLASHCARD_GEN_URL = os.getenv("FLASHCARD_GEN_URL", "http://flashcard-gen:8000/generate")
+
+_cred = credentials.Certificate(os.getenv("FIREBASE_CREDENTIALS_PATH", "serviceAccountKey.json"))
+firebase_admin.initialize_app(_cred)
+
+_bearer = HTTPBearer()
+
+async def get_current_user(
+    token: HTTPAuthorizationCredentials = Depends(_bearer),
+) -> dict:
+    try:
+        # verify_id_token è sincrono → asyncio.to_thread per non bloccare l'event loop
+        decoded = await asyncio.to_thread(
+            firebase_auth.verify_id_token, token.credentials
+        )
+        return decoded
+    except firebase_auth.ExpiredIdTokenError:
+        raise HTTPException(status_code=401, detail="Token scaduto")
+    except firebase_auth.InvalidIdTokenError:
+        raise HTTPException(status_code=401, detail="Token non valido")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Autenticazione fallita")
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

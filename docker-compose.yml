@@ -8,6 +8,7 @@ services:
       - MARKITDOWN_URL=http://markitdown:8490/process_file
       - UNSTRUCTURED_URL=http://unstructured:8000/general/v0/general
       - FLASHCARD_GEN_URL=http://flashcard-gen:8000/generate
+      - FIREBASE_CREDENTIALS_PATH=/app/serviceAccountKey.json
     depends_on:
       - db
       - markitdown
