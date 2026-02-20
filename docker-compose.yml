@@ -2,19 +2,21 @@ services:
   backend-service:
     build: .
     ports:
-      - "8080:8000" # only port exposed
+      - "8080:8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - MARKITDOWN_URL=http://markitdown:8490/process_file
       - UNSTRUCTURED_URL=http://unstructured:8000/general/v0/general
       - FLASHCARD_GEN_URL=http://flashcard-gen:8000/generate
       - FIREBASE_CREDENTIALS_PATH=/app/serviceAccountKey.json
+    volumes:
+      - ./serviceAccountKey.json:/app/serviceAccountKey.json:ro
     depends_on:
       - db
       - markitdown
       - unstructured
       - flashcard-gen
-    restart: unless-stopped # resilient
+    restart: unless-stopped
 
   db:
     image: postgres:15-alpine
@@ -44,6 +46,7 @@ services:
       - API_KEY=${AI_API_KEY}
       - MODEL=${AI_MODEL}
       - BASE_URL=${AI_BASE_URL}
+    restart: unless-stopped
 
 volumes:
   postgres_data:

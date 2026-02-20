@@ -1,38 +1,58 @@
 # FlashcardsAPI
 
-Un backend robusto a microservizi per la generazione automatizzata di flashcard da documenti. Il sistema orchestra una pipeline di elaborazione che include conversione, segmentazione semantica (chunking) e generazione AI tramite provider compatibili con il protocollo OpenAI.
+Backend a microservizi per la generazione automatizzata di flashcard da documenti. Orchestra una pipeline di conversione (MarkItDown), segmentazione semantica (Unstructured) e generazione AI.
 
-## ARCHITETTURA A MICROSERVIZI
 
-Il sistema è composto da 4 servizi dockerizzati:
+## ARCHITETTURA
 
-1.  **Backend Service (FastAPI)**: Orchestratore principale. Gestisce l'upload, la persistenza su DB e il coordinamento tra i servizi.
-2.  **Unstructured API**: Motore di ETL per l'elaborazione di documenti non strutturati.
-3.  **MarkItDown**: Servizio di conversione dedicato per trasformare input vari in Markdown pulito.
-4.  **Flashcard Generator**: Microservizio "AI-Agnostic". Funziona come un client **OpenAI-compatible**, permettendo l'interfacciamento con qualsiasi provider SaaS (Groq, OpenAI, DeepInfra) o modelli locali (vLLM, LocalAI) semplicemente cambiando la `BASE_URL`.
+- **Backend Service** (FastAPI): API gateway e orchestratore
+- **MarkItDown**: Conversione documenti → Markdown
+- **Unstructured**: Chunking semantico (`by_title`, 1000 char, 150 overlap)
+- **Flashcard Generator**: Microservizio OpenAI-compatible per generazione Q&A
+- **PostgreSQL**: Persistenza metadati e chunk
 
-## STRATEGIA DI CHUNKING (Unstructured)
 
-Il sistema applica una strategia di segmentazione rigorosa per ottimizzare il contesto passato al LLM. La configurazione attuale nel backend definisce:
+## ENDPOINTS
 
-* **Strategia**: `by_title` (Il testo viene diviso rispettando la gerarchia delle sezioni/titoli).
-* **Max Characters**: `1000` (Dimensione massima del chunk per garantire granularità).
-* **Overlap**: `150` (Sovrapposizione di caratteri per mantenere la continuità semantica tra i segmenti).
+Tutti gli endpoint richiedono autenticazione Firebase JWT nell'header `Authorization: Bearer <token>`.
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| `POST` | `/api/v1/upload-file` | Upload documento. Esegue pipeline completa (conversione → chunking → persistenza). Ritorna `201` con `{"id": <file_id>}` e header `Location`. |
+| `DELETE` | `/api/v1/delete-file` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. Body: `{"id": <int>}`. |
+| `POST` | `/api/v1/get-flashcards` | Genera flashcard AI da chunk random del file. Body: `{"id": <int>, "limit": <int>}`. Ritorna lista di `{"question": "...", "answer": "..."}`. |
+
+Ownership: ogni file è associato allo `user_id` Firebase; gli utenti possono operare solo sui propri file.
+
 
 ## CONFIGURAZIONE
 
-### Variabili d'Ambiente (.env)
-
-Creare un file `.env` nella root del progetto. Grazie all'architettura flessibile, è possibile configurare qualsiasi modello compatibile con le API di OpenAI.
+### `.env`
 
 ```bash
-# Configurazione modello e provider LLM
-AI_API_KEY = "your-api-key"
-AI_MODEL = "openai/gpt-oss-20b"
-AI_BASE_URL = "https://api.groq.com/openai/v1"
+# Provider LLM (OpenAI-compatible)
+AI_API_KEY="gsk_..."
+AI_MODEL="llama-3.1-70b-versatile"
+AI_BASE_URL="https://api.groq.com/openai/v1"
 
-# Configurazione Database
+# Database
 DATABASE_URL="postgresql+asyncpg://postgres:postgres@db/files_db"
 POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="postgres"
 POSTGRES_DB="files_db"
+```
+
+### Autenticazione Firebase
+
+Scaricare `serviceAccountKey.json` da Firebase Console → Impostazioni progetto → Account di servizio → Genera nuova chiave privata. Posizionare il file nella root del progetto (accanto a `main.py`).
+
+> ⚠️ Aggiungere `serviceAccountKey.json` a `.gitignore` e `.dockerignore`.
+
+
+## AVVIO
+
+```bash
+docker compose up --build
+```
+
+L'API è disponibile su `http://localhost:8080`.
