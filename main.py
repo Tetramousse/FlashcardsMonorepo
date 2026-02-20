@@ -9,10 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import credentials, auth as firebase_auth
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, select, func, delete
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select, func
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
+
+from models import Base, FileModel, ChunkModel
 
 DATABASE_URL     = os.getenv("DATABASE_URL",     "postgresql+asyncpg://user:password@db/dbname")
 MARKITDOWN_URL   = os.getenv("MARKITDOWN_URL",   "http://markitdown:8490/process_file")
@@ -35,25 +37,8 @@ async def get_current_user(token: HTTPAuthorizationCredentials = Depends(_bearer
     except Exception:
         raise HTTPException(status_code=401, detail="Autenticazione fallita")
 
-
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-Base = declarative_base()
-
-
-class FileModel(Base):
-    __tablename__ = "files"
-    id      = Column(Integer, primary_key=True, index=True)
-    name    = Column(String, index=True)
-    user_id = Column(String, index=True, nullable=False)
-
-
-class ChunkModel(Base):
-    __tablename__ = "chunks"
-    id      = Column(Integer, primary_key=True, index=True)
-    file_id = Column(Integer, ForeignKey("files.id"))
-    content = Column(Text)
-
 
 async def get_db():
     db = AsyncSessionLocal()
@@ -61,17 +46,6 @@ async def get_db():
         yield db
     finally:
         await db.close()
-
-
-app = FastAPI(title="FlashcardAPI")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -81,9 +55,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="FlashcardAPI", lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 v1_router = APIRouter(prefix="/api/v1", tags=["Versione 1"])
-
 
 class DeleteRequest(BaseModel):
     id: int
@@ -95,7 +75,6 @@ class FlashcardRequest(BaseModel):
 class FlashcardResponse(BaseModel):
     question: str
     answer: str
-
 
 @v1_router.post("/upload-file", status_code=status.HTTP_201_CREATED)
 async def upload_file(
@@ -137,7 +116,6 @@ async def upload_file(
     response.headers["Location"] = f"/api/v1/files/{new_file.id}"
     return {"id": new_file.id}
 
-
 @v1_router.delete("/delete-file", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_file(
     req: DeleteRequest,
@@ -153,12 +131,10 @@ async def delete_file(
     if not file_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File non trovato.")
 
-    await db.execute(delete(ChunkModel).where(ChunkModel.file_id == req.id))
     await db.delete(file_obj)
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
 
 @v1_router.post("/get-flashcards", response_model=List[FlashcardResponse], status_code=status.HTTP_200_OK)
 async def get_flashcards(
@@ -191,6 +167,5 @@ async def get_flashcards(
         )
         gen_response.raise_for_status()
         return gen_response.json()
-
 
 app.include_router(v1_router)
