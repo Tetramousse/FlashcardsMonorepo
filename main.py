@@ -2,7 +2,8 @@ import os
 import io
 import httpx
 from typing import List
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, APIRouter, status, Response
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, select, func, delete
@@ -37,7 +38,22 @@ async def get_db():
     finally:
         await db.close()
 
-app = FastAPI()
+app = FastAPI(title="FlashcardAPI")
+
+# --- Configurazione CORS ---
+app.add_middleware(
+    CORSMiddleware,
+    # Definisci chi può contattare l'API. Usa ["*"] in sviluppo per permettere tutto.
+    # In produzione, inserisci l'URL esatto del tuo frontend, es: ["https://miosito.com"]
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"], # Permette tutti i metodi (GET, POST, DELETE, ecc.)
+    allow_headers=["*"], # Permette tutti gli header
+)
+
+#Router v1
+v1_router = APIRouter(prefix="/api/v1", tags=["Versione 1"])
+
 
 class DeleteRequest(BaseModel):
     id: int
@@ -50,8 +66,13 @@ class FlashcardResponse(BaseModel):
     question: str
     answer: str
 
-@app.post("/uploadFile")
-async def upload_file(name: str = Form(...), file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+@v1_router.post("/upload-file", status_code=status.HTTP_201_CREATED)
+async def upload_file(
+    response: Response, 
+    name: str = Form(...), 
+    file: UploadFile = File(...), 
+    db: AsyncSession = Depends(get_db)):
+
     file_content = await file.read()
     
     async with httpx.AsyncClient(timeout = 120.0) as client:
@@ -88,36 +109,36 @@ async def upload_file(name: str = Form(...), file: UploadFile = File(...), db: A
     ]
     db.add_all(chunks_to_add)
     await db.commit()
+
+    response.headers["Location"] = f"/api/v1/files/{new_file.id}"
     
     return {"id": new_file.id}
 
-@app.delete("/deleteFile")
+
+@v1_router.delete("/delete-file", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_file(req: DeleteRequest, db: AsyncSession = Depends(get_db)):
-    # 1. Recupera il file
     result = await db.execute(select(FileModel).where(FileModel.id == req.id))
     file_obj = result.scalars().first()
 
     if not file_obj:
-        raise HTTPException(status_code=404, detail=f"File with ID: {req.id} not found.")
+        #404 Not Found
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File non trovato.")
 
-    # 2. Cancella prima i chunk associati
-    await db.execute(
-        delete(ChunkModel).where(ChunkModel.file_id == req.id)
-    )
-
-    # 3. Poi cancella il file
+    await db.execute(delete(ChunkModel).where(ChunkModel.file_id == req.id))
     await db.delete(file_obj)
     await db.commit()
 
-    return {"success": True}
+    #204 No Content
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@app.post("/getFlashcards", response_model=List[FlashcardResponse])
+@v1_router.post("/get-flashcards", response_model=List[FlashcardResponse], status_code=status.HTTP_200_OK)
 async def get_flashcards(req: FlashcardRequest, db: AsyncSession = Depends(get_db)):
     result_file = await db.execute(select(FileModel).where(FileModel.id == req.id))
     file_obj = result_file.scalars().first()
 
     if not file_obj:
-        raise HTTPException(status_code=404, detail=f"File with ID: {req.id} not found.")
+        #404 Not Found
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File non trovato.")
 
     query = select(ChunkModel.content).where(ChunkModel.file_id == req.id).order_by(func.random()).limit(req.limit)
     result = await db.execute(query)
@@ -135,3 +156,5 @@ async def get_flashcards(req: FlashcardRequest, db: AsyncSession = Depends(get_d
         )
         gen_response.raise_for_status()
         return gen_response.json()
+
+app.include_router(v1_router)
