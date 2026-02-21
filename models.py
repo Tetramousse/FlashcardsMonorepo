@@ -1,4 +1,6 @@
+import uuid
 from sqlalchemy import ForeignKey, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from pydantic import BaseModel
 
@@ -10,7 +12,7 @@ class Base(DeclarativeBase):
 class FileModel(Base):
     __tablename__ = "files"
     
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(index=True)
     user_id: Mapped[str] = mapped_column(index=True)
     
@@ -20,14 +22,14 @@ class FileModel(Base):
 class ChunkModel(Base):
     __tablename__ = "chunks"
     
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    file_id: Mapped[int] = mapped_column(ForeignKey("files.id", ondelete="CASCADE"))
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
+    file_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("files.id", ondelete="CASCADE"))
     content: Mapped[str] = mapped_column(Text)
     
     file: Mapped["FileModel"] = relationship(back_populates="chunks")
 
 
 class FileSummary(BaseModel):
-    id: int
+    id: uuid.UUID
     name: str
     preview: str

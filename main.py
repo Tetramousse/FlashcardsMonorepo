@@ -3,6 +3,7 @@ import io
 import asyncio
 import httpx
 import firebase_admin
+from uuid import UUID
 from typing import List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, APIRouter, status, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,11 +79,11 @@ v1_router = APIRouter(prefix="/api/v1", tags=["Versione 1"])
 
 
 class DeleteRequest(BaseModel):
-    id: int
+    id: UUID
 
 
 class FlashcardRequest(BaseModel):
-    id: int
+    id: UUID
     limit: int = 10
 
 

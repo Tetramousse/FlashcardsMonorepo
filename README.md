@@ -19,8 +19,8 @@ Tutti gli endpoint richiedono autenticazione Firebase JWT nell'header `Authoriza
 | Metodo | Endpoint | Descrizione |
 |--------|----------|-------------|
 | `POST` | `/api/v1/upload-file` | Upload documento. Esegue pipeline completa (conversione → chunking → persistenza). Ritorna `201` con `{"id": <file_id>}` e header `Location`. |
-| `DELETE` | `/api/v1/delete-file` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. Body: `{"id": <int>}`. |
-| `POST` | `/api/v1/get-flashcards` | Genera flashcard AI da chunk random del file. Body: `{"id": <int>, "limit": <int>}`. Ritorna lista di `{"question": "...", "answer": "..."}`. |
+| `DELETE` | `/api/v1/delete-file` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. Body: `{"id": <uuid>}`. |
+| `POST` | `/api/v1/get-flashcards` | Genera flashcard AI da chunk random del file. Body: `{"id": <uuid>, "limit": <int>}`. Ritorna lista di `{"question": "...", "answer": "..."}`. |
 
 Ownership: ogni file è associato allo `user_id` Firebase; gli utenti possono operare solo sui propri file.
 
