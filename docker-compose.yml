@@ -2,7 +2,7 @@ services:
   backend-service:
     build: .
     ports:
-      - "8080:8000"
+      - "9090:8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - MARKITDOWN_URL=http://markitdown:8490/process_file

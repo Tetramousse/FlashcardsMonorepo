@@ -1,8 +1,11 @@
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from pydantic import BaseModel
+
 
 class Base(DeclarativeBase):
     pass
+
 
 class FileModel(Base):
     __tablename__ = "files"
@@ -13,6 +16,7 @@ class FileModel(Base):
     
     chunks: Mapped[list["ChunkModel"]] = relationship(back_populates="file", cascade="all, delete")
 
+
 class ChunkModel(Base):
     __tablename__ = "chunks"
     
@@ -21,3 +25,9 @@ class ChunkModel(Base):
     content: Mapped[str] = mapped_column(Text)
     
     file: Mapped["FileModel"] = relationship(back_populates="chunks")
+
+
+class FileSummary(BaseModel):
+    id: int
+    name: str
+    preview: str
