@@ -18,6 +18,7 @@ Tutti gli endpoint richiedono autenticazione Firebase JWT nell'header `Authoriza
 
 | Metodo | Endpoint | Descrizione |
 |--------|----------|-------------|
+| `GET` | `/api/v1/get-files` | Restituisce la lista dei file dell'utente autenticato con preview del primo chunk (`id`, `name`, `preview`). |
 | `POST` | `/api/v1/upload-file` | Upload documento. Esegue pipeline completa (conversione → chunking → persistenza). Ritorna `201` con `{"id": <file_id>}` e header `Location`. |
 | `DELETE` | `/api/v1/delete-file` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. Body: `{"id": <uuid>}`. |
 | `POST` | `/api/v1/get-flashcards` | Genera flashcard AI da chunk random del file. Body: `{"id": <uuid>, "limit": <int>}`. Ritorna lista di `{"question": "...", "answer": "..."}`. |
@@ -30,6 +31,11 @@ Ownership: ogni file è associato allo `user_id` Firebase; gli utenti possono op
 ### `.env`
 
 ```bash
+# Endpoint microservizi
+MARKITDOWN_URL="http://markitdown:8490/process_file"
+UNSTRUCTURED_URL="http://unstructured:8000/general/v0/general"
+FLASHCARD_GEN_URL="http://flashcard-gen:8000/generate"
+
 # Provider LLM (OpenAI-compatible)
 AI_API_KEY="gsk_..."
 AI_MODEL="llama-3.1-70b-versatile"
@@ -55,4 +61,4 @@ Scaricare `serviceAccountKey.json` da Firebase Console → Impostazioni progetto
 docker compose up --build
 ```
 
-L'API è disponibile su `http://localhost:8080`.
+L'API è disponibile su `http://localhost:9090`.
