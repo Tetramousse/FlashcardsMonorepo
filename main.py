@@ -2,6 +2,9 @@ import io
 import asyncio
 import httpx
 import firebase_admin
+import logging
+import time
+import os
 from uuid import UUID
 from typing import List, Optional
 from contextlib import asynccontextmanager
@@ -19,6 +22,7 @@ from fastapi import (
     Request,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import credentials, auth as firebase_auth
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
@@ -30,6 +34,8 @@ from models import Base, FileModel, ChunkModel, FileSummary
 from config import get_settings
 
 settings = get_settings()
+logger = logging.getLogger("flashcard_api")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 engine: Optional[AsyncEngine] = None
 AsyncSessionLocal = None
@@ -46,9 +52,9 @@ async def get_current_user(
             firebase_auth.verify_id_token, token.credentials
         )
         return decoded
-    except firebase_auth.ExpiredIdTokenError:
+    except firebase_admin.auth.ExpiredIdTokenError:
         raise HTTPException(status_code=401, detail="Token scaduto")
-    except firebase_auth.InvalidIdTokenError:
+    except firebase_admin.auth.InvalidIdTokenError:
         raise HTTPException(status_code=401, detail="Token non valido")
     except Exception:
         raise HTTPException(status_code=401, detail="Autenticazione fallita")
@@ -95,11 +101,35 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="FlashcardAPI", lifespan=lifespan)
 
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration = time.perf_counter() - start
+    logger.info(
+        "%s %s %s %.3fs %s",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration,
+        request.headers.get("user-agent", "-"),
+    )
+    response.headers["X-Process-Time"] = f"{duration:.3f}"
+    return response
+
+
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = [o.strip() for o in _raw_origins.split(",")] if _raw_origins else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
+    allow_credentials=allowed_origins != ["*"],
 )
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -124,14 +154,12 @@ async def list_files(
     current_user: dict = Depends(get_current_user),
 ):
     uid = current_user["uid"]
-
     result = await db.execute(
         select(FileModel)
         .options(selectinload(FileModel.chunks))
         .where(FileModel.user_id == uid)
     )
     files = result.scalars().all()
-
     summaries = []
     for f in files:
         if f.chunks:
@@ -140,7 +168,6 @@ async def list_files(
         else:
             preview = ""
         summaries.append(FileSummary(id=f.id, name=f.name, preview=preview))
-
     return summaries
 
 
@@ -208,15 +235,12 @@ async def delete_file(
     current_user: dict = Depends(get_current_user),
 ):
     uid = current_user["uid"]
-
     result = await db.execute(
         select(FileModel).where(FileModel.id == file_id, FileModel.user_id == uid)
     )
     file_obj = result.scalars().first()
-
     if not file_obj:
         raise HTTPException(status_code=404, detail="File non trovato.")
-
     await db.delete(file_obj)
     return Response(status_code=204)
 
@@ -233,7 +257,6 @@ async def generate_flashcards(
     http_client: httpx.AsyncClient = Depends(get_http_client),
 ):
     uid = current_user["uid"]
-
     file_result = await db.execute(
         select(FileModel).where(FileModel.id == file_id, FileModel.user_id == uid)
     )

@@ -1,10 +1,8 @@
-fastapi
-uvicorn
-sqlalchemy
-asyncpg
-httpx
+fastapi==0.131.0
+firebase_admin==7.1.0
+httpx==0.28.1
+pydantic==2.12.5
+SQLAlchemy==2.0.46
+uvicorn[standard]
 python-multipart
-pydantic
-pydantic-settings
-firebase-admin
-asyncio
+asyncpg
