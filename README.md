@@ -18,9 +18,10 @@ Tutti gli endpoint richiedono autenticazione Firebase JWT nell'header `Authoriza
 
 | Metodo | Endpoint | Descrizione | Rate limit per IP |
 |--------|----------|-------------|-------------------|
-| `POST` | `/api/v1/upload-file` | Upload documento. Esegue pipeline completa (conversione → chunking → persistenza). Ritorna `201` con `{"id": <file_id>}` e header `Location`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
-| `DELETE` | `/api/v1/delete-file` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. Body: `{"id": <uuid>}`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
-| `POST` | `/api/v1/get-flashcards` | Genera flashcard AI da chunk random del file. Body: `{"id": <uuid>, "limit": <int>}`. Ritorna lista di `{"question": "...", "answer": "..."}`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
+| `GET` | `/api/v1/files` | Lista i file dell'utente autenticato con preview del primo chunk. Ritorna `200` con array di `{"id": <uuid>, "name": "...", "preview": "..."}`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
+| `POST` | `/api/v1/files` | Upload documento (`multipart/form-data` con `name` e `file`). Esegue pipeline completa (conversione → chunking → persistenza). Ritorna `201` con `{"id": <file_id>}` e header `Location`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
+| `DELETE` | `/api/v1/files/{file_id}` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
+| `POST` | `/api/v1/files/{file_id}/flashcards` | Genera flashcard AI da chunk random del file. Body JSON: `{"limit": <int>}` (default `10`). Ritorna lista di `{"question": "...", "answer": "..."}`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
 
 **Ownership**: ogni file è associato allo `user_id` Firebase; gli utenti possono operare solo sui propri file.
 
