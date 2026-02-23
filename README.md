@@ -14,17 +14,51 @@ Backend a microservizi per la generazione automatizzata di flashcard da document
 
 Tutti gli endpoint richiedono autenticazione Firebase JWT nell'header `Authorization: Bearer <token>`.
 
-| Metodo | Endpoint | Descrizione |
-|--------|----------|-------------|
-| `POST` | `/api/v1/upload-file` | Upload documento. Esegue pipeline completa (conversione → chunking → persistenza). Ritorna `201` con `{"id": <file_id>}` e header `Location`. |
-| `DELETE` | `/api/v1/delete-file` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. Body: `{"id": <uuid>}`. |
-| `POST` | `/api/v1/get-flashcards` | Genera flashcard AI da chunk random del file. Body: `{"id": <uuid>, "limit": <int>}`. Ritorna lista di `{"question": "...", "answer": "..."}`. |
+> Il rate limit è applicato da Nginx a livello globale per IP (`location /`), quindi i valori sono uguali per ogni endpoint.
+
+| Metodo | Endpoint | Descrizione | Rate limit per IP |
+|--------|----------|-------------|-------------------|
+| `POST` | `/api/v1/upload-file` | Upload documento. Esegue pipeline completa (conversione → chunking → persistenza). Ritorna `201` con `{"id": <file_id>}` e header `Location`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
+| `DELETE` | `/api/v1/delete-file` | Elimina file e relativi chunk. Ritorna `204` o `404` se non trovato/non autorizzato. Body: `{"id": <uuid>}`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
+| `POST` | `/api/v1/get-flashcards` | Genera flashcard AI da chunk random del file. Body: `{"id": <uuid>, "limit": <int>}`. Ritorna lista di `{"question": "...", "answer": "..."}`. | `10 req/s`, burst `20`, max `10` connessioni concorrenti |
 
 **Ownership**: ogni file è associato allo `user_id` Firebase; gli utenti possono operare solo sui propri file.
 
 **Errori servizi esterni**:
 - `502` — servizio esterno ha risposto con errore (MarkItDown, Unstructured, Flashcard Generator)
 - `503` — servizio esterno non raggiungibile
+
+## RATE LIMIT, RETE E COMPORTAMENTO GATEWAY
+
+Il traffico verso gli endpoint API passa da Nginx (reverse proxy) con le seguenti policy:
+
+- **Rate limit per IP**: `10 richieste/secondo`
+- **Burst**: fino a `20` richieste extra (`nodelay`)
+- **Connessioni concorrenti per IP**: massimo `10`
+
+Quando i limiti vengono superati, Nginx può rispondere con `503 Service Temporarily Unavailable` (configurazione di default per `limit_req` / `limit_conn` se non viene impostato uno status dedicato).
+
+### Timeout gateway
+
+- `client_header_timeout`: `12s`
+- `client_body_timeout`: `12s`
+- `keepalive_timeout`: `15s`
+- `send_timeout`: `10s`
+- `proxy_connect_timeout`: `30s`
+- `proxy_send_timeout`: `120s`
+- `proxy_read_timeout`: `120s`
+
+### Compressione e forwarding
+
+- **Gzip attivo** per `application/json`, `text/plain`, `application/javascript`, `text/css`
+- `gzip_min_length`: `1000`
+- Header inoltrati al backend: `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`
+
+### Note operative
+
+- Il reverse proxy usa upstream `backend-service:8000`.
+- L'access log include `request_time` (`rt`) per aiutare analisi performance e troubleshooting.
+- In caso di timeout/latenza sui microservizi a valle, è possibile ricevere errori gateway lato API.
 
 ## CONFIGURAZIONE
 
