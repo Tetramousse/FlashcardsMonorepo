@@ -4,11 +4,11 @@ Backend a microservizi per la generazione automatizzata di flashcard da document
 
 ## ARCHITETTURA
 
-- **Backend Service** (FastAPI): API gateway e orchestratore
-- **MarkItDown**: Conversione documenti → Markdown
-- **Unstructured**: Chunking semantico (`by_title`, 1000 char, 150 overlap)
-- **Flashcard Generator**: Microservizio OpenAI-compatible per generazione Q&A
-- **PostgreSQL**: Persistenza metadati e chunk
+- **Backend Service ([FastAPI](https://fastapi.tiangolo.com/))**: API gateway e orchestratore
+- **[MarkItDown](https://github.com/microsoft/markitdown)**: Conversione documenti → Markdown
+- **[Unstructured](https://docs.unstructured.io/open-source/introduction/overview)**: Chunking semantico (`by_title`, 1000 char, 150 overlap)
+- **Flashcard Generator**: Microservizio [OpenAI-compatible](https://platform.openai.com/docs/api-reference/introduction) per generazione Q&A
+- **[PostgreSQL](https://www.postgresql.org/)**: Persistenza metadati e chunk
 
 ## ENDPOINTS
 
@@ -37,7 +37,7 @@ Il traffico verso gli endpoint API passa da Nginx (reverse proxy) con le seguent
 - **Burst**: fino a `20` richieste extra (`nodelay`)
 - **Connessioni concorrenti per IP**: massimo `10`
 
-Quando i limiti vengono superati, Nginx può rispondere con `503 Service Temporarily Unavailable` (configurazione di default per `limit_req` / `limit_conn` se non viene impostato uno status dedicato).
+Quando i limiti vengono superati, [Nginx](https://nginx.org/en/docs/) può rispondere con `503 Service Temporarily Unavailable` (configurazione di default per `limit_req` / `limit_conn` se non viene impostato uno status dedicato).
 
 ### Timeout gateway
 
@@ -95,4 +95,50 @@ Scaricare `serviceAccountKey.json` da Firebase Console → Impostazioni progetto
 docker compose up --build
 ```
 
-L'API è disponibile su `http://localhost:9090`.
+L'API è disponibile su [localhost:9090](http://localhost:9090).
+
+
+## SERVIZI E SOFTWARE UTILIZZATI
+
+### Orchestrazione e runtime
+
+- **[Docker](https://www.docker.com/)** + **[Docker Compose](https://docs.docker.com/compose/)**
+- **[Python 3.10](https://www.python.org/downloads/release/python-3100/)**
+- **[Uvicorn](https://www.uvicorn.org/)** (ASGI server)
+- **[Nginx](https://nginx.org/)** (reverse proxy, rate limiting, connessioni concorrenti)
+
+### Servizi containerizzati (compose)
+
+- **[backend-service](https://fastapi.tiangolo.com/)** (FastAPI)
+- **[db](https://hub.docker.com/_/postgres)**: PostgreSQL 15 (`postgres:15-alpine`)
+- **[unstructured](https://hub.docker.com/r/robwilkes/unstructured-api)**: API Unstructured (`robwilkes/unstructured-api:latest`)
+- **[markitdown](https://github.com/microsoft/markitdown)**: servizio di conversione documenti → Markdown
+- **[flashcard-gen](https://platform.openai.com/docs/api-reference/introduction)**: microservizio generazione flashcard (OpenAI-compatible)
+- **[nginx](https://hub.docker.com/_/nginx)**: gateway esterno
+
+### Librerie backend (Python)
+
+- **[fastapi](https://pypi.org/project/fastapi/)**
+- **[uvicorn](https://pypi.org/project/uvicorn/)** (`uvicorn[standard]`)
+- **[pydantic](https://pypi.org/project/pydantic/)**
+- **[SQLAlchemy](https://pypi.org/project/SQLAlchemy/)**
+- **[asyncpg](https://pypi.org/project/asyncpg/)**
+- **[httpx](https://pypi.org/project/httpx/)**
+- **[python-multipart](https://pypi.org/project/python-multipart/)**
+- **[firebase-admin](https://pypi.org/project/firebase-admin/)**
+
+### Servizi esterni / integrazioni
+
+- **[Firebase Authentication](https://firebase.google.com/docs/auth)** (verifica JWT)
+- **Provider LLM [OpenAI-compatible](https://platform.openai.com/docs/api-reference/introduction)** configurato via `AI_BASE_URL` / `AI_MODEL` / `AI_API_KEY` (es. [Groq](https://console.groq.com/docs/openai))
+
+## INTEGRAZIONE CONSIGLIATA
+
+Questo backend è progettato per funzionare in integrazione con:
+
+- **[FlashcardsFrontend](https://github.com/Heron4gf/FlashcardsFrontend.git)**: interfaccia utente web per upload file, gestione documenti e visualizzazione flashcard.
+- **[AIflashcardsGenerator](https://github.com/Heron4gf/AIflashcardsGenerator.git)**: servizio di generazione Q&A consumato dall'endpoint `POST /api/v1/files/{file_id}/flashcards`.
+
+
+
+
