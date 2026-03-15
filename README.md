@@ -4,11 +4,7 @@ Backend a microservizi per la generazione automatizzata di flashcard da document
 
 ## ARCHITETTURA
 
-- **Backend Service ([FastAPI](https://fastapi.tiangolo.com/))**: API gateway e orchestratore
-- **[MarkItDown](https://github.com/microsoft/markitdown)**: Conversione documenti → Markdown
-- **[Unstructured](https://docs.unstructured.io/open-source/introduction/overview)**: Chunking semantico (`by_title`, 1000 char, 150 overlap)
-- **Flashcard Generator**: Microservizio [OpenAI-compatible](https://platform.openai.com/docs/api-reference/introduction) per generazione Q&A
-- **[PostgreSQL](https://www.postgresql.org/)**: Persistenza metadati e chunk
+![Architettura](image.png)
 
 ## ENDPOINTS
 
@@ -140,5 +136,4 @@ Questo backend è progettato per funzionare in integrazione con:
 - **[AIflashcardsGenerator](https://github.com/Heron4gf/AIflashcardsGenerator.git)**: servizio di generazione Q&A consumato dall'endpoint `POST /api/v1/files/{file_id}/flashcards`.
 
 
-
-
+> Nota: parte di questo progetto è stata sviluppata con il supporto di strumenti di intelligenza artificiale.
