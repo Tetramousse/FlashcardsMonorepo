@@ -109,7 +109,7 @@ L'API è disponibile su [localhost:9090](http://localhost:9090).
 - **[db](https://hub.docker.com/_/postgres)**: PostgreSQL 15 (`postgres:15-alpine`)
 - **[unstructured](https://hub.docker.com/r/robwilkes/unstructured-api)**: API Unstructured (`robwilkes/unstructured-api:latest`)
 - **[markitdown](https://github.com/microsoft/markitdown)**: servizio di conversione documenti → Markdown
-- **[flashcard-gen](https://platform.openai.com/docs/api-reference/introduction)**: microservizio generazione flashcard (OpenAI-compatible)
+- **[AIflashcardsGenerator](https://github.com/Heron4gf/AIflashcardsGenerator)**: microservizio generazione flashcard (OpenAI-compatible)
 - **[nginx](https://hub.docker.com/_/nginx)**: gateway esterno
 
 ### Librerie backend (Python)
@@ -128,12 +128,11 @@ L'API è disponibile su [localhost:9090](http://localhost:9090).
 - **[Firebase Authentication](https://firebase.google.com/docs/auth)** (verifica JWT)
 - **Provider LLM [OpenAI-compatible](https://platform.openai.com/docs/api-reference/introduction)** configurato via `AI_BASE_URL` / `AI_MODEL` / `AI_API_KEY` (es. [Groq](https://console.groq.com/docs/openai))
 
-## INTEGRAZIONE CONSIGLIATA
+## FRONTEND CONSIGLIATO
 
 Questo backend è progettato per funzionare in integrazione con:
 
 - **[FlashcardsFrontend](https://github.com/Heron4gf/FlashcardsFrontend.git)**: interfaccia utente web per upload file, gestione documenti e visualizzazione flashcard.
-- **[AIflashcardsGenerator](https://github.com/Heron4gf/AIflashcardsGenerator.git)**: servizio di generazione Q&A consumato dall'endpoint `POST /api/v1/files/{file_id}/flashcards`.
 
 
 > Nota: parte di questo progetto è stata sviluppata con il supporto di strumenti di intelligenza artificiale.
