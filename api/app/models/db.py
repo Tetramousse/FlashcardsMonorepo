@@ -2,7 +2,6 @@ import uuid
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from pydantic import BaseModel
 
 
 class Base(DeclarativeBase):
@@ -27,9 +26,3 @@ class ChunkModel(Base):
     content: Mapped[str] = mapped_column(Text)
     
     file: Mapped["FileModel"] = relationship(back_populates="chunks")
-
-
-class FileSummary(BaseModel):
-    id: uuid.UUID
-    name: str
-    preview: str

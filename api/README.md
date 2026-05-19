@@ -4,7 +4,7 @@ Backend a microservizi per la generazione automatizzata di flashcard da document
 
 ## ARCHITETTURA
 
-![Architettura](image.png)
+![Architettura](./images/image.png)
 
 ## ENDPOINTS
 

@@ -1,138 +1,36 @@
 import io
 import asyncio
 import httpx
-import firebase_admin
 import logging
-import time
-import os
 from uuid import UUID
 from typing import List, Optional
-from contextlib import asynccontextmanager
 
 from fastapi import (
-    FastAPI,
+    APIRouter,
     UploadFile,
     File,
     Form,
     HTTPException,
     Depends,
-    APIRouter,
-    status,
-    Response,
     Request,
+    Response,
 )
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from firebase_admin import credentials, auth as firebase_auth
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
-from sqlalchemy.orm import sessionmaker, selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select, func
 from pydantic import BaseModel
 
-from models import Base, FileModel, ChunkModel, FileSummary
-from config import get_settings
+from api.app.models.db import FileModel, ChunkModel
+from api.app.models.schemas import FileSummary
+from api.app.config import get_settings
+from api.app.dependencies import get_db, get_current_user
 
-settings = get_settings()
 logger = logging.getLogger("flashcard_api")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-
-engine: Optional[AsyncEngine] = None
-AsyncSessionLocal = None
-_bearer = HTTPBearer(auto_error=False)
-
-
-async def get_current_user(
-    token: HTTPAuthorizationCredentials = Depends(_bearer),
-) -> dict:
-    if not token:
-        raise HTTPException(status_code=401, detail="Token mancante")
-    try:
-        decoded = await asyncio.to_thread(
-            firebase_auth.verify_id_token, token.credentials
-        )
-        return decoded
-    except firebase_admin.auth.ExpiredIdTokenError:
-        raise HTTPException(status_code=401, detail="Token scaduto")
-    except firebase_admin.auth.InvalidIdTokenError:
-        raise HTTPException(status_code=401, detail="Token non valido")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Autenticazione fallita")
-
-
-async def get_db():
-    if AsyncSessionLocal is None:
-        raise HTTPException(status_code=500, detail="Database non inizializzato")
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
+settings = get_settings()
 
 
 def get_http_client(request: Request) -> httpx.AsyncClient:
     return request.app.state.http_client
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global engine, AsyncSessionLocal
-
-    cred = credentials.Certificate(settings.firebase_credentials_path)
-    firebase_admin.initialize_app(cred)
-
-    engine = create_async_engine(settings.database_url, echo=False)
-    AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    async with httpx.AsyncClient(
-        timeout=120.0,
-        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-    ) as client:
-        app.state.http_client = client
-        yield
-
-    await engine.dispose()
-
-
-app = FastAPI(title="FlashcardAPI", lifespan=lifespan)
-
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
-
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    start = time.perf_counter()
-    response = await call_next(request)
-    duration = time.perf_counter() - start
-    logger.info(
-        "%s %s %s %.3fs %s",
-        request.method,
-        request.url.path,
-        response.status_code,
-        duration,
-        request.headers.get("user-agent", "-"),
-    )
-    response.headers["X-Process-Time"] = f"{duration:.3f}"
-    return response
-
-
-_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
-allowed_origins = [o.strip() for o in _raw_origins.split(",")] if _raw_origins else ["*"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_methods=["GET", "POST", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
-    allow_credentials=allowed_origins != ["*"],
-)
-
-v1_router = APIRouter(prefix="/api/v1")
 
 
 class FileCreatedResponse(BaseModel):
@@ -146,6 +44,9 @@ class FlashcardRequest(BaseModel):
 class FlashcardResponse(BaseModel):
     question: str
     answer: str
+
+
+v1_router = APIRouter(prefix="/api/v1")
 
 
 @v1_router.get("/files", response_model=List[FileSummary])
@@ -292,6 +193,3 @@ async def generate_flashcards(
             status_code=503,
             detail="Servizio di generazione flashcard non raggiungibile",
         )
-
-
-app.include_router(v1_router)
