@@ -1,0 +1,86 @@
+.speech-bubble {
+    position: relative;
+    top: -20px;
+}
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 40px;
+    justify-items: center;
+
+    padding-top: 80px;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+/* ============================= */
+/* DELETE MODE + DRAG (UI) */
+/* ============================= */
+
+/* Overlay per uscire dalla modalità elimina cliccando fuori */
+.delete-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.05);
+    z-index: 50;
+}
+
+/* Wrapper attorno a <app-folder-preview> (serve per pointer/drag/title) */
+.folder-item {
+    position: relative;
+    z-index: 60;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    user-select: none;
+}
+
+
+.folder-item.is-delete-mode {
+    cursor: grab;
+    animation: wiggle 0.25s ease-in-out infinite alternate;
+}
+
+/* Quando l’elemento è in trascinamento */
+.folder-item.is-dragging {
+    opacity: 0.45;
+    transform: scale(0.92);
+    animation: none;
+}
+
+/* Animazione simile a iOS  */
+@keyframes wiggle {
+    from {
+        transform: rotate(-1deg);
+    }
+    to {
+        transform: rotate(1deg);
+    }
+}
+
+/* Cestino fisso in basso al centro */
+.trash-dock {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    z-index: 100;
+    pointer-events: auto;
+    display: flex;
+    justify-content: center;
+}
+
+.trash-pill {
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 14px 22px;
+    font-weight: 600;
+    font-size: 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    user-select: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.trash-pill:hover {
+    transform: scale(1.04);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.20);
+}

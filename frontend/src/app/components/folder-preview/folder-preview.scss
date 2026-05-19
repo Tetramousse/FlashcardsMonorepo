@@ -1,0 +1,120 @@
+.folder-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  width: 160px; 
+}
+
+.folder {
+  position: relative;
+  width: 150px;
+  margin: 0 auto;
+  transition: transform 0.2s ease;
+}
+
+.folder svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.10));
+  position: relative;
+  z-index: 2; // cartella sopra
+}
+
+
+.folder-peek {
+  position: absolute;
+  left: 50%;
+  top: -45px;
+  transform: translateX(-50%) translateY(12px);
+
+  width: 125px;
+  height: 130px;   
+
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+
+  box-shadow:
+    0 12px 20px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  padding: 18px 14px 10px 14px;
+
+  z-index: 1;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: 
+    opacity 180ms ease,
+    transform 180ms ease;
+
+  overflow: hidden;
+}
+
+.folder-peek p {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;      
+  font-weight: 800;
+  line-height: 1.15;
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* massimo 2 righe */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+
+.folder::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+ 
+  top: 40px;           
+  width: 135px;
+  height: 55px;
+
+  background: rgba(245, 166, 35, 0.85); 
+  border-radius: 10px;
+
+  z-index: 3;
+  pointer-events: none;
+
+  
+  filter: blur(0.0px);
+  opacity: 0.0; 
+}
+
+
+
+.folder-wrapper:hover .folder-peek {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0px);
+}
+
+.folder-wrapper:hover .folder {
+  transform: translateY(2px);
+}
+
+.folder-label {
+  margin-top: 10px;
+  font-size: 22px; 
+  font-weight: 800;
+  color: #2b78ff;
+  font-family: sans-serif;
+}

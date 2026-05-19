@@ -1,0 +1,36 @@
+<nav class="d-flex flex-column justify-content-between align-items-center py-4 h-100 rounded-pill shadow-lg" style="background-color: #EAF4FF;">
+      
+      <!-- HOME -->
+      <div class="nav-group">
+        <a 
+          routerLink="/" 
+          routerLinkActive="active" 
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link"
+          aria-label="Home">
+          <i class="bi bi-house-door-fill fs-4"></i>
+        </a>
+      </div>
+
+      <!-- ADD QUIZ -->
+      <div class="nav-group">
+        <a 
+          routerLink="/add"
+          routerLinkActive="active"
+          class="btn btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center add-btn"
+          aria-label="Add Quiz">
+          <i class="bi bi-plus fs-2"></i>
+        </a>
+      </div>
+
+      <!-- RANDOM QUIZ -->
+      <div class="nav-group">
+        <button 
+          (click)="openRandomQuiz()"
+          class="nav-link"
+          style="border: none; background: none;"
+          aria-label="Random Quiz">
+          <i class="bi bi-shuffle fs-4"></i>
+        </button>
+    </div>
+</nav>

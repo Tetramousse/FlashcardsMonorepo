@@ -1,0 +1,83 @@
+<div class="container-fluid p-0">
+    <app-sidebar />
+
+    <main class="main-content min-vh-100 d-flex flex-column align-items-center justify-content-center p-4">
+        
+        @if (loading()) {
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Caricamento...</span>
+                </div>
+                <p class="text-primary">Caricamento flashcard...</p>
+            </div>
+        } @else if (error()) {
+            <div class="text-center animate-fade-in">
+                <h2 class="text-danger mb-4 fw-bold">Errore</h2>
+                <div class="alert alert-danger" role="alert">
+                    {{ error() }}
+                </div>
+                <a routerLink="/" class="btn btn-primary rounded-pill px-4 mt-3">Torna alla Home</a>
+            </div>
+        } @else if (cards().length === 0) {
+            <div class="text-center animate-fade-in">
+                <h2 class="text-primary mb-4 fw-bold">Nessuna flashcard</h2>
+                <p>Questo file non contiene contenuto valido per generare flashcard.</p>
+                <a routerLink="/" class="btn btn-primary rounded-pill px-4 mt-3">Torna alla Home</a>
+            </div>
+        } @else if (!quizFinished()) {
+            <div class="w-100 d-flex flex-column align-items-center gap-4">
+            
+                <img ngSrc="assets/robot-icon.png" width="80" height="80" alt="Robot Helper" class="mb-2" />
+
+                <app-flashcard
+                    [question]="currentCard().question"
+                    [answer]="currentCard().answer"
+                    [isFlipped]="isFlipped()"
+                    (flip)="toggleFlip()"
+                    (rate)="submitScore($event)"
+                />
+
+                <div class="controls w-100 d-flex justify-content-center align-items-center gap-4 mt-4">
+                    <button 
+                        class="btn btn-secondary rounded-pill px-4" 
+                        [disabled]="currentIndex() === 0"
+                        (click)="prevCard()">
+                        Indietro
+                    </button>
+
+                    <div class="d-flex gap-2">
+                        @for (card of cards(); track $index) {
+                            <div 
+                                class="dot" 
+                                [class.active]="$index === currentIndex()"
+                                [class.completed]="$index < currentIndex()">
+                            </div>
+                        }
+                    </div>
+
+                    <button 
+                        class="btn btn-primary rounded-pill px-4"
+                        (click)="nextCard()">
+                        {{ isLastCard() ? 'Fine' : 'Avanti' }}
+                    </button>
+                </div>
+            </div>
+
+        } @else {
+            <div class="text-center animate-fade-in">
+                <h2 class="text-primary mb-4 fw-bold">Complimenti! Hai completato le flashcard.</h2>
+                
+                <div class="robot-speech position-relative d-inline-block mb-4">
+                    <div class="speech-bubble bg-white p-4 rounded-4 shadow-sm mb-3">
+                        <h4 class="m-0 text-dark">Hai totalizzato {{ totalScore() }}pt</h4>
+                    </div>
+                    <img ngSrc="assets/assistant-robot.png" width="200" height="200" alt="Happy Robot" priority />
+                </div>
+
+                <div class="mt-4">
+                    <a routerLink="/" class="btn btn-primary btn-lg rounded-pill px-5">Torna alla Home</a>
+                </div>
+            </div>
+        }
+    </main>
+</div>

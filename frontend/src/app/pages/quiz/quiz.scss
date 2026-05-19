@@ -1,0 +1,24 @@
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    transition: all 0.3s ease;
+    &.active {
+        background-color: #5b9bf2;
+        transform: scale(1.2);
+    }
+      
+    &.completed {
+        background-color: #5b9bf2;
+        opacity: 0.5;
+    }    
+}
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

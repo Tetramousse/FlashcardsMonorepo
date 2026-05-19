@@ -1,0 +1,78 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">
+        {{ isLoginMode() ? 'Welcome back' : 'Create account' }}
+      </h1>
+      <p class="auth-subtitle">
+        {{ isLoginMode() ? 'Sign in to continue' : 'Get started for free' }}
+      </p>
+    </div>
+
+    @if (error()) {
+      <div class="alert alert-danger" role="alert">
+        {{ error() }}
+      </div>
+    }
+
+    <form (ngSubmit)="submit()" class="auth-form">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          placeholder="Enter your email"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          placeholder="Enter your password"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary w-100 mb-3"
+        [disabled]="isLoading()"
+      >
+        @if (isLoading()) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        }
+        {{ isLoginMode() ? 'Sign In' : 'Sign Up' }}
+      </button>
+    </form>
+
+    <div class="divider">
+      <span>or continue with</span>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-outline-dark w-100 google-btn"
+      (click)="signInWithGoogle()"
+      [disabled]="isLoading()"
+    >
+      <i class="bi bi-google me-2"></i>
+      Google
+    </button>
+
+    <p class="auth-switch">
+      {{ isLoginMode() ? "Don't have an account?" : 'Already have an account?' }}
+      <a href="javascript:void(0)" (click)="toggleMode()">
+        {{ isLoginMode() ? 'Sign Up' : 'Sign In' }}
+      </a>
+    </p>
+  </div>
+</div>
