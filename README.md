@@ -4,14 +4,14 @@ Applicazione full-stack per il caricamento di documenti PDF, la generazione auto
 
 Questo progetto unisce un'interfaccia utente moderna e reattiva con un'architettura backend robusta a microservizi. [cite_start]Il backend orchestra una pipeline di conversione documenti tramite MarkItDown, segmentazione semantica tramite API Unstructured ed elaborazione per la generazione tramite LLM.
 
-## 🏗️ Struttura del Progetto
+## Struttura del Progetto
 
 Il progetto è diviso in due macro-aree principali:
 
 - `/frontend` → Applicazione client basata su **Angular 21** (Standalone).
 - [cite_start]`/backend` → API a microservizi basata su **Python / FastAPI** e orchestrata tramite **Docker**.
 
-## 💻 Tech Stack
+## Tech Stack
 
 **Frontend:**
 - Angular 21 (Standalone Components + SSR)
@@ -41,7 +41,7 @@ Il progetto è diviso in due macro-aree principali:
 
 ---
 
-## 🛡️ Rete, Rate Limit e Gateway (Nginx)
+## Rete, Rate Limit e Gateway (Nginx)
 
 [cite_start]Il traffico API passa da Nginx, che applica le seguenti policy globali per IP (`location /`):
 
