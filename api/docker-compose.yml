@@ -1,0 +1,78 @@
+services:
+  nginx: # reverse proxy, ci permette di definire rate-limiting e regole di accesso 
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend-service
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+  backend-service:
+    build: .
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MARKITDOWN_URL=http://markitdown:8490/process_file
+      - UNSTRUCTURED_URL=http://unstructured:8000/general/v0/general
+      - FLASHCARD_GEN_URL=http://flashcard-gen:8000/generate
+      - FIREBASE_CREDENTIALS_PATH=/app/serviceAccountKey.json
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    volumes:
+      - ./serviceAccountKey.json:/app/serviceAccountKey.json:ro
+    depends_on:
+      - db
+      - markitdown
+      - unstructured
+      - flashcard-gen
+    networks:
+      - backend
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    restart: unless-stopped
+
+  unstructured:
+    image: robwilkes/unstructured-api:latest
+    networks:
+      - backend
+    restart: unless-stopped
+
+  markitdown:
+    build:
+      context: ../MarkItDownServer
+      dockerfile: Dockerfile
+    networks:
+      - backend
+    restart: unless-stopped
+
+  flashcard-gen:
+    build:
+      context: ../FlashcardGenerator
+      dockerfile: Dockerfile
+    environment:
+      - API_KEY=${AI_API_KEY}
+      - MODEL=${AI_MODEL}
+      - BASE_URL=${AI_BASE_URL}
+    networks:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  frontend:
+  backend:
