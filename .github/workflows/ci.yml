@@ -1,0 +1,37 @@
+name: Flashcards CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'api/**'
+      - 'MarkItDownServer/**'
+      - 'FlashcardGenerator/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Prepara i file fantasma per la Build
+        working-directory: ./api
+        run: |
+          touch serviceAccountKey.json
+          
+          echo "POSTGRES_USER=test_user" >> .env
+          echo "POSTGRES_PASSWORD=test_pass" >> .env
+          echo "POSTGRES_DB=test_db" >> .env
+          echo "DATABASE_URL=postgresql://test_user:test_pass@db:5432/test_db" >> .env
+          echo "AI_API_KEY=dummy_key" >> .env
+          
+      - name: Verifica la Build di tutti i servizi
+        working-directory: ./api
+        run: docker-compose build
