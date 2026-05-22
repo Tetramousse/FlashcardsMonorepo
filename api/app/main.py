@@ -14,10 +14,10 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from firebase_admin import credentials
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 
-from api.app.models.db import Base
-from api.app.config import get_settings
-from api.app.router import v1_router
-from api.app import dependencies
+from app.models.db import Base
+from app.config import get_settings
+from app.router import v1_router
+from app import dependencies
 
 settings = get_settings()
 logger = logging.getLogger("flashcard_api")

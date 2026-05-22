@@ -20,10 +20,10 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import select, func
 from pydantic import BaseModel
 
-from api.app.models.db import FileModel, ChunkModel
-from api.app.models.schemas import FileSummary
-from api.app.config import get_settings
-from api.app.dependencies import get_db, get_current_user
+from app.models.db import FileModel, ChunkModel
+from app.models.schemas import FileSummary
+from app.config import get_settings
+from app.dependencies import get_db, get_current_user
 
 logger = logging.getLogger("flashcard_api")
 settings = get_settings()

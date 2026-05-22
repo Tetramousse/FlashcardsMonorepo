@@ -7,7 +7,7 @@ from firebase_admin import auth as firebase_auth
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from api.app.config import get_settings
+from app.config import get_settings
 
 settings = get_settings()
 
@@ -47,13 +47,11 @@ async def get_db():
 
 
 def init_db():
-    """Initialize database engine and session factory."""
     global engine, AsyncSessionLocal
     engine = create_async_engine(settings.database_url, echo=False)
     AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 def create_base_tables():
-    """Create all database tables."""
-    from api.app.models.db import Base
+    from app.models.db import Base
     asyncio.run(engine.run_sync(Base.metadata.create_all))
