@@ -51,17 +51,13 @@ services:
     restart: unless-stopped
 
   markitdown:
-    build:
-      context: ../MarkItDownServer
-      dockerfile: Dockerfile
+    image: ghcr.io/manu24life/mark-it-down:743f6cc374248de65e918d369496110ba9ee02af
     networks:
       - backend
     restart: unless-stopped
 
   flashcard-gen:
-    build:
-      context: ../FlashcardGenerator
-      dockerfile: Dockerfile
+    image: ghcr.io/heron4gf/flashcardsaigenerator:614dc0af5df9d9c40036625b29815cf3efaaaff1
     environment:
       - API_KEY=${AI_API_KEY}
       - MODEL=${AI_MODEL}
