@@ -1,5 +1,5 @@
 services:
-  nginx: # reverse proxy, ci permette di definire rate-limiting e regole di accesso 
+  nginx:
     image: nginx:alpine
     ports:
       - "80:80"
@@ -24,10 +24,14 @@ services:
     volumes:
       - ./serviceAccountKey.json:/app/serviceAccountKey.json:ro
     depends_on:
-      - db
-      - markitdown
-      - unstructured
-      - flashcard-gen
+      db:
+        condition: service_healthy
+      markitdown:
+        condition: service_started
+      unstructured:
+        condition: service_started
+      flashcard-gen:
+        condition: service_started
     networks:
       - backend
     restart: unless-stopped
@@ -43,6 +47,11 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   unstructured:
     image: robwilkes/unstructured-api:latest
