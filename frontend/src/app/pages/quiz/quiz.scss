@@ -1,3 +1,22 @@
+.quiz-card-row {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.quiz-card-shell {
+    width: 100%;
+    max-width: 600px;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.tap-zone {
+    display: none;
+}
+
 .dot {
     width: 12px;
     height: 12px;
@@ -21,4 +40,47 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .quiz-card-row {
+        display: grid;
+        grid-template-columns: minmax(36px, 1fr) minmax(0, calc(100% - 88px)) minmax(36px, 1fr);
+        gap: 8px;
+    }
+
+    .quiz-card-shell {
+        max-width: none;
+    }
+
+    .tap-zone {
+        display: block;
+        min-width: 36px;
+        border: 0;
+        border-radius: 16px;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    .tap-zone:disabled {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .quiz-nav-btn {
+        display: none;
+    }
+
+    .controls {
+        margin-top: 1rem !important;
+        gap: 0.75rem !important;
+    }
+
+    .dots {
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+    }
 }
