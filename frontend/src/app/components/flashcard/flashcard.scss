@@ -2,7 +2,7 @@
       display: block;
       width: 100%;
       max-width: 600px;
-      height: 350px;
+      height: clamp(240px, 58vw, 350px);
       perspective: 1000px;
     }
 
@@ -35,6 +35,16 @@
       cursor: pointer;
     }
 
+    h3 {
+      max-width: 100%;
+      max-height: 100%;
+      margin: 0;
+      overflow-y: auto;
+      overflow-wrap: anywhere;
+      line-height: 1.25;
+      font-size: clamp(1rem, 2.5vw, 1.75rem);
+    }
+
     .card-front {
       border: 2px solid #e0e0e0;
       padding: 16px;
@@ -51,6 +61,35 @@
       color: white;
     }
 
+    .content {
+      min-height: 0;
+    }
+
+    .actions {
+      flex-wrap: wrap;
+      justify-content: center;
+      padding-inline: 1rem;
+    }
+
     .btn-light {
       min-width: 60px;
+    }
+
+    @media (max-width: 480px) {
+      :host {
+        height: clamp(230px, 72vw, 300px);
+      }
+
+      .card-face {
+        border-radius: 18px;
+      }
+
+      .card-front {
+        padding: 12px;
+      }
+
+      .pattern-border {
+        border-width: 3px;
+        border-radius: 12px;
+      }
     }
