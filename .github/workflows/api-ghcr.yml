@@ -58,7 +58,7 @@ jobs:
 
     - name: Connect to DigitalOcean Kubernetes
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: doctl kubernetes cluster kubeconfig save ${{ secrets.DOKS_CLUSTER_NAME }}
+      run: doctl kubernetes cluster kubeconfig save k8s-1-36-0-do-0-lon1-1779874547211
 
     - name: Update image in Kubernetes
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
