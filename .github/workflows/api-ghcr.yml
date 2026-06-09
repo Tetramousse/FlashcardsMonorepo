@@ -9,15 +9,15 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-api 
+  IMAGE_NAME: ${{ github.repository }}-api
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
-      packages: write 
+      packages: write
 
     steps:
     - name: Checkout code
@@ -31,7 +31,7 @@ jobs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }} 
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Extract metadata (tags, labels)
       id: meta
@@ -49,3 +49,19 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Install doctl
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+    - name: Connect to DigitalOcean Kubernetes
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: doctl kubernetes cluster kubeconfig save k8s-1-36-0-do-0-lon1-1779874547211
+
+    - name: Update image in Kubernetes
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        kubectl set image deployment/backend-service \
+          backend-service=ghcr.io/tetramousse/flashcardsmonorepo-api:sha-$(echo ${{ github.sha }} | cut -c1-7)

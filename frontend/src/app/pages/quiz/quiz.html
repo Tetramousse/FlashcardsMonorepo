@@ -29,23 +29,42 @@
             
                 <img ngSrc="assets/robot-icon.png" width="80" height="80" alt="Robot Helper" class="mb-2" />
 
-                <app-flashcard
-                    [question]="currentCard().question"
-                    [answer]="currentCard().answer"
-                    [isFlipped]="isFlipped()"
-                    (flip)="toggleFlip()"
-                    (rate)="submitScore($event)"
-                />
+                <div class="quiz-card-row">
+                    <button
+                        type="button"
+                        class="tap-zone tap-zone-left"
+                        [disabled]="currentIndex() === 0"
+                        (click)="prevCard()"
+                        aria-label="Flashcard precedente">
+                    </button>
+
+                    <div class="quiz-card-shell">
+                        <app-flashcard
+                            [question]="currentCard().question"
+                            [answer]="currentCard().answer"
+                            [isFlipped]="isFlipped()"
+                            (flip)="toggleFlip()"
+                            (rate)="submitScore($event)"
+                        />
+                    </div>
+
+                    <button
+                        type="button"
+                        class="tap-zone tap-zone-right"
+                        (click)="nextCard()"
+                        [attr.aria-label]="isLastCard() ? 'Completa quiz' : 'Flashcard successiva'">
+                    </button>
+                </div>
 
                 <div class="controls w-100 d-flex justify-content-center align-items-center gap-4 mt-4">
                     <button 
-                        class="btn btn-secondary rounded-pill px-4" 
+                        class="quiz-nav-btn btn btn-secondary rounded-pill px-4" 
                         [disabled]="currentIndex() === 0"
                         (click)="prevCard()">
                         Indietro
                     </button>
 
-                    <div class="d-flex gap-2">
+                    <div class="dots d-flex gap-2">
                         @for (card of cards(); track $index) {
                             <div 
                                 class="dot" 
@@ -56,7 +75,7 @@
                     </div>
 
                     <button 
-                        class="btn btn-primary rounded-pill px-4"
+                        class="quiz-nav-btn btn btn-primary rounded-pill px-4"
                         (click)="nextCard()">
                         {{ isLastCard() ? 'Fine' : 'Avanti' }}
                     </button>
