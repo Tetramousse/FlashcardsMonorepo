@@ -11,9 +11,9 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 import { app } from '../firebase.config';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
-import { Observable, from, switchMap } from 'rxjs';
+import { Observable, from, switchMap, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -75,8 +75,16 @@ export class AuthService {
 }
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const platformId = inject(PLATFORM_ID);
+
+  // Skip token injection on the server (SSR/build) — Firebase Auth is browser-only.
+  // Without this guard, the build crashes with "allowedHosts is not iterable".
+  if (isPlatformServer(platformId)) {
+    return next(req);
+  }
+
   const authService = inject(AuthService);
-  
+
   return from(authService.getAuthToken()).pipe(
     switchMap(token => {
       if (token) {
