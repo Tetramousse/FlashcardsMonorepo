@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "prebuild": "echo $ENCODED_ENV_FILE | base64 -d > src/app/environments/environment.ts && echo $ENCODED_FIREBASE_FILE | base64 -d > src/app/firebase.config.ts",
+    "prebuild": "echo $ENCODED_ENV_FILE | base64 -d > src/app/environments/environment.local.ts && echo $ENCODED_FIREBASE_FILE | base64 -d > src/app/firebase.config.ts",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
