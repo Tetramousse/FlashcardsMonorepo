@@ -166,7 +166,8 @@ async def generate_flashcards(
 
     chunk_result = await db.execute(
         select(ChunkModel.content)
-        .where(ChunkModel.file_id == file_id)
+        .join(FileModel, ChunkModel.file_id == FileModel.id)
+        .where(ChunkModel.file_id == file_id, FileModel.user_id == uid)
         .order_by(func.random())
         .limit(req.limit)
     )
