@@ -17,6 +17,17 @@ spec:
       containers:
         - image: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.89
           name: unstructured
+          env:
+            # The API rejects requests with 503 when node free memory is below
+            # this threshold (default 2048 MB — permanently true on a 4GB node).
+            - name: UNSTRUCTURED_MEMORY_FREE_MINIMUM_MB
+              value: "512"
+          resources:
+            requests:
+              memory: 512Mi
+            limits:
+              # Contain OOM to this pod instead of destabilizing the node
+              memory: 1536Mi
           ports:
             - containerPort: 8000
       restartPolicy: Always
