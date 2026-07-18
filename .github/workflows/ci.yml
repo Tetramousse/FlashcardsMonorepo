@@ -35,4 +35,4 @@ jobs:
           
       - name: Verifica la Build di tutti i servizi
         working-directory: ./api
-        run: docker-compose build
+        run: docker compose build
