@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import auth as firebase_auth
+from firebase_admin import exceptions as firebase_exceptions
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -26,12 +27,14 @@ async def get_current_user(
             firebase_auth.verify_id_token, token.credentials
         )
         return decoded
-    except firebase_admin.auth.ExpiredIdTokenError:
+    except firebase_auth.ExpiredIdTokenError:
         raise HTTPException(status_code=401, detail="Token scaduto")
-    except firebase_admin.auth.InvalidIdTokenError:
+    except firebase_auth.InvalidIdTokenError:
         raise HTTPException(status_code=401, detail="Token non valido")
-    except Exception:
+    except firebase_exceptions.FirebaseError:
         raise HTTPException(status_code=401, detail="Autenticazione fallita")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Errore interno di autenticazione")
 
 
 async def get_db():
