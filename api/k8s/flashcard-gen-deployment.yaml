@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: flashcard-gen
+  name: flashcard-gen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: flashcard-gen
+  template:
+    metadata:
+      labels:
+        io.kompose.service: flashcard-gen
+    spec:
+      containers:
+        - env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flashcard-gen-secret
+                  key: API_KEY
+            - name: BASE_URL
+              value: https://api.groq.com/openai/v1
+            - name: MODEL
+              value: openai/gpt-oss-20b
+          image: ghcr.io/heron4gf/flashcardsaigenerator:614dc0af5df9d9c40036625b29815cf3efaaaff1
+          name: flashcard-gen
+      restartPolicy: Always

@@ -1,0 +1,73 @@
+# ClusterIP Services for the internal components. These existed on the old cluster
+# but were never exported by kompose; without them the in-cluster DNS names used in
+# the deployments and nginx.conf (backend-service, db, flashcard-gen, markitdown,
+# unstructured) do not resolve.
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: backend-service
+  name: backend-service
+spec:
+  ports:
+    - name: "8000"
+      port: 8000
+      targetPort: 8000
+  selector:
+    io.kompose.service: backend-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: db
+  name: db
+spec:
+  ports:
+    - name: "5432"
+      port: 5432
+      targetPort: 5432
+  selector:
+    io.kompose.service: db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: flashcard-gen
+  name: flashcard-gen
+spec:
+  ports:
+    - name: "8000"
+      port: 8000
+      targetPort: 8000
+  selector:
+    io.kompose.service: flashcard-gen
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: markitdown
+  name: markitdown
+spec:
+  ports:
+    - name: "8490"
+      port: 8490
+      targetPort: 8490
+  selector:
+    io.kompose.service: markitdown
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: unstructured
+  name: unstructured
+spec:
+  ports:
+    - name: "8000"
+      port: 8000
+      targetPort: 8000
+  selector:
+    io.kompose.service: unstructured

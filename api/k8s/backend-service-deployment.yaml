@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: backend-service
+  name: backend-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: backend-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: backend-service
+    spec:
+      # Scommenta le due righe seguenti se il repository su GHCR è privato:
+      # imagePullSecrets:
+      #   - name: ghcr-login-secret
+      containers:
+        - env:
+            - name: ALLOWED_ORIGINS
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DATABASE_URL
+            - name: FIREBASE_CREDENTIALS_PATH
+              value: /app/serviceAccountKey.json
+            - name: FLASHCARD_GEN_URL
+              value: http://flashcard-gen:8000/generate
+            - name: MARKITDOWN_URL
+              value: http://markitdown:8490/process_file
+            - name: UNSTRUCTURED_URL
+              value: http://unstructured:8000/general/v0/general
+          image: ghcr.io/tetramousse/flashcardsmonorepo-api:sha-d263024
+          name: backend-service
+          volumeMounts:
+            - mountPath: /app/serviceAccountKey.json
+              name: firebase-sa
+              readOnly: true
+              subPath: serviceAccountKey.json
+      restartPolicy: Always
+      volumes:
+        - name: firebase-sa
+          secret:
+            secretName: firebase-service-account
+            items:
+              - key: serviceAccountKey.json
+                path: serviceAccountKey.json

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: markitdown
+  name: markitdown
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: markitdown
+  template:
+    metadata:
+      labels:
+        io.kompose.service: markitdown
+    spec:
+      containers:
+        - image: ghcr.io/manu24life/mark-it-down:743f6cc374248de65e918d369496110ba9ee02af
+          name: markitdown
+      restartPolicy: Always

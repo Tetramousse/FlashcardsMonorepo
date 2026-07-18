@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: nginx
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: nginx
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: nginx
+    spec:
+      initContainers:
+        - name: wait-for-backend
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z backend-service 8000; do echo "waiting for backend..."; sleep 2; done']
+      containers:
+        - image: nginx:alpine
+          name: nginx
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/nginx/nginx.conf
+              name: nginx-cm0
+              readOnly: true
+              subPath: nginx.conf
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+            name: nginx-cm0
+          name: nginx-cm0

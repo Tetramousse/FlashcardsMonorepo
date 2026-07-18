@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: unstructured
+  name: unstructured
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: unstructured
+  template:
+    metadata:
+      labels:
+        io.kompose.service: unstructured
+    spec:
+      containers:
+        - image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
+          name: unstructured
+          ports:
+            - containerPort: 8000
+      restartPolicy: Always
