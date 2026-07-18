@@ -5,7 +5,7 @@ metadata:
     io.kompose.service: nginx
   name: nginx
 spec:
-  type: LoadBalancer
+  # ClusterIP: public traffic enters through the Traefik ingress (see ingress.yaml)
   ports:
     - name: "80"
       port: 80

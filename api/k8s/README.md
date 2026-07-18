@@ -10,6 +10,20 @@ at deploy time from the gitignored `api/.env` and `api/serviceAccountKey.json` b
 | `flashcard-gen-secret` | `API_KEY` | `flashcard-gen` (env `secretKeyRef`) |
 | `firebase-service-account` | `serviceAccountKey.json` | `backend-service` (Secret volume at `/app/serviceAccountKey.json`) |
 
+## Cluster prerequisites (once per cluster)
+
+Traefik terminates public TLS; cert-manager obtains Let's Encrypt certificates
+for the nip.io hostname of Traefik's LoadBalancer IP (see `ingress.yaml`):
+
+```powershell
+helm repo add traefik https://traefik.github.io/charts
+helm install traefik traefik/traefik --namespace traefik --create-namespace
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.21.0/cert-manager.yaml
+```
+
+If the Traefik LoadBalancer IP ever changes, update the hostname in
+`ingress.yaml` and the frontend's `ENCODED_ENV_FILE` on App Platform to match.
+
 ## Deploy (order matters)
 
 ```powershell
@@ -25,8 +39,8 @@ kubectl apply -f .
 # 4. Wait for rollout
 kubectl rollout status deployment/backend-service deployment/db deployment/flashcard-gen deployment/nginx
 
-# 5. Public IP
-kubectl get svc nginx
+# 5. Public endpoint (Traefik LB IP; API served at https://<dashed-ip>.nip.io)
+kubectl get svc traefik -n traefik
 ```
 
 ## Updating a secret value

@@ -22,6 +22,7 @@ spec:
       containers:
         - env:
             - name: ALLOWED_ORIGINS
+              value: https://whale-app-luogx.ondigitalocean.app,http://localhost:4200
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:

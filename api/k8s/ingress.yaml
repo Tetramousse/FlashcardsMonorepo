@@ -1,0 +1,27 @@
+# Public HTTPS entrypoint. Traefik terminates TLS with a Let's Encrypt
+# certificate that cert-manager obtains for the nip.io name of the Traefik
+# LoadBalancer IP (nip.io resolves <dashed-ip>.nip.io to that IP; if the LB
+# ever gets a new IP, update the two hostnames below to match).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - 168-144-8-11.nip.io
+      secretName: api-tls
+  rules:
+    - host: 168-144-8-11.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
